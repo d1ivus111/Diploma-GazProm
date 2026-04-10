@@ -1,25 +1,29 @@
 import allure
-
 from locators.locators_header import Header
 from conftest import web_browser
 
+
 def test_main_header(web_browser):
     page = Header(web_browser)
-    if page.btn_menu1.is_clickable():
-        page.btn_menu1.click(3)
-
-    page.btn_menu1.click(3)
 
     data = [
-        (page.btn_menu1, "Кнопка О «Газпроме»"),
-        (page.btn_menu2, "Кнопка Акционерам и инвесторам"),
-        (page.btn_menu3, "Кнопка Пресс-центр"),
-        (page.btn_menu4, "Кнопка Проекты"),
-        (page.btn_menu5, "Кнопка Устойчивое развитие"),
-        (page.btn_menu6, "Кнопка Противодействие мошенничеству"),
-        (page.btn_menu7, "Кнопка Контактная информация"),
+        (page.btn_menu1, "Кнопка О «Газпроме»", "about"),
+        (page.btn_menu2, "Кнопка Акционерам и инвесторам", "investors"),
+        (page.btn_menu3, "Кнопка Пресс-центр", "press"),
+        (page.btn_menu4, "Кнопка Проекты", "projects"),
+        (page.btn_menu5, "Кнопка Устойчивое развитие", "sustainability"),
+        (page.btn_menu6, "Кнопка Противодействие мошенничеству", "warning"),
+        (page.btn_menu7, "Кнопка Контактная информация", "contacts"),
     ]
 
-    for btn, text in data:
-        with allure.step(f'Проверка кликабельности {text}'):
-            assert btn.is_clickable(), f'некликабельна {text}'
+    for btn, text, expected_url_part in data:
+        with allure.step(f'Проверка ссылки: {text}'):
+
+            assert btn.is_clickable(), f'Некликабельна {text}'
+            btn.click()
+
+            current_url = web_browser.current_url
+            assert expected_url_part in current_url, \
+                f'Неверный URL у {text}: {current_url}'
+
+            web_browser.back()

@@ -18,3 +18,4 @@ class Header(WebPage):
     btn_menu5 = WebElement(xpath="(//menu//a)[5]")
     btn_menu6 = WebElement(xpath="(//menu//a)[6]")
     btn_menu7 = WebElement(xpath="(//menu//a)[7]")
+
