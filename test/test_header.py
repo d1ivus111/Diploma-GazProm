@@ -2,7 +2,8 @@ import allure
 from locators.locators_header import Header
 from conftest import web_browser
 
-
+@allure.title('Header test')
+@allure.feature('UI Gazprom header test')
 def test_main_header(web_browser):
     page = Header(web_browser)
 

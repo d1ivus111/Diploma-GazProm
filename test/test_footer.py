@@ -2,7 +2,8 @@ import allure
 from locators.locators_footer import Footer
 from conftest import web_browser
 
-
+@allure.title('Footer test')
+@allure.feature('UI Gazprom footer test')
 def test_main_footer(web_browser):
     page = Footer(web_browser)
 
