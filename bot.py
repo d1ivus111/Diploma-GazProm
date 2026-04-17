@@ -39,7 +39,7 @@ async def run_all_tests(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Запуск pytest
     result = await execute_command(
-        "pytest -s -v class_work_12/test --alluredir=./results",
+        "pytest -s -v test/ --alluredir=./results",
         update
     )
 
