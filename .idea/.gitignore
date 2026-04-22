@@ -1,5 +1,9 @@
 # Default ignored files
 /shelf/
 /workspace.xml
+<<<<<<< HEAD
 # Editor-based HTTP Client requests
 /httpRequests/
+=======
+.
+>>>>>>> b91f261 (Diploma GazProm1)
