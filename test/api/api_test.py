@@ -22,7 +22,6 @@ def get_price(coin_id):
 
     pytest.skip("пропуск из-за rate limit API")
 
-
 @pytest.mark.parametrize("coin_id, min_price", [
     ("bitcoin", 30000),
     ("ethereum", 1000),

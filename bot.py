@@ -1,3 +1,6 @@
+import decimal
+import encodings
+
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 import os
@@ -197,6 +200,13 @@ async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(about_text)
 
+async def pwd_env(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Узнать какое используется окружение"""
+    gen_result = await execute_command(
+        "pwd",
+    )
+    results = encodings.utf_8(gen_result)
+    await update.message.reply_text(f'Какое окружение используется {results}')
 
 def main():
     application = Application.builder().token('8747047863:AAEtbIqoOfDxTVxxyueIICApJU4J65DAsPg').build()
