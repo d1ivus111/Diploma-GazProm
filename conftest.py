@@ -146,15 +146,15 @@ def pytest_collection_finish(session):
         pytest.exit('Done!')
 
 
-import pytest
-from playwright.sync_api import Playwright, Page, APIRequestContext, expect
-
-
-@pytest.fixture(scope="session")
-def api_request_context(
-        playwright: Playwright,
-):
-    request_context = playwright.request.new_context(
-        base_url="https://restful-booker.herokuapp.com")
-    yield request_context
-    request_context.dispose()
+# import pytest
+# from playwright.sync_api import Playwright, Page, APIRequestContext, expect
+#
+#
+# @pytest.fixture(scope="session")
+# def api_request_context(
+#         playwright: Playwright,
+# ):
+#     request_context = playwright.request.new_context(
+#         base_url="https://restful-booker.herokuapp.com")
+#     yield request_context
+#     request_context.dispose()

@@ -68,7 +68,7 @@ async def run_ui_tests(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Запуск pytest
     result = await execute_command(
-        "pytest -s -v test/ --alluredir=./results",
+        "pytest -s -v test/ui/ --alluredir=./results",
         update
     )
 
