@@ -1,30 +1,17 @@
-import asyncio
-import zipfile
-import time
-import os
-import sys
-from pathlib import Path
+import decimal
+import encodings
+
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
-from ollama import chat
-from datasets import load_dataset
-
-# ========== Конфигурация ==========
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8747047863:AAEtbIqoOfDxTVxxyueIICApJU4J65DAsPg")  # лучше через переменную окружения
-OLLAMA_MODEL = "deepseek-r1:8b"  # модель, которую загрузили в ollama
-DATASET_NAME = "imdb"  # датасет из Hugging Face (для примера)
-
-# Загружаем датасет один раз при старте (кэшируется HF)
-try:
-    dataset = load_dataset(DATASET_NAME, split="train")
-    print(f"Датасет {DATASET_NAME} загружен, {len(dataset)} записей")
-except Exception as e:
-    print(f"Не удалось загрузить датасет: {e}")
-    dataset = None
+import os
+import zipfile
+import time
+import asyncio
+from pathlib import Path
 
 
 async def execute_command(cmd: str, update: Update, timeout: int = 300) -> str:
-    """Выполняет shell-команду с таймаутом"""
+    """Выполняет shell-команду с таймаутом и возвращает результат"""
     try:
         proc = await asyncio.create_subprocess_shell(
             cmd,
@@ -32,7 +19,7 @@ async def execute_command(cmd: str, update: Update, timeout: int = 300) -> str:
             stderr=asyncio.subprocess.PIPE
         )
         stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout)
-        output = (f"STDOUT:\n{stdout.decode().strip()}" if stdout else "")
+        output = f"STDOUT:\n{stdout.decode().strip()}" if stdout else ""
         output += f"\nSTDERR:\n{stderr.decode().strip()}" if stderr else ""
         return output.strip()
     except asyncio.TimeoutError:
@@ -40,20 +27,6 @@ async def execute_command(cmd: str, update: Update, timeout: int = 300) -> str:
     except Exception as e:
         return f"⚠️ Ошибка: {str(e)}"
 
-async def query_ollama(prompt: str) -> str:
-    """
-    Отправляет запрос в Ollama (асинхронная обёртка над синхронным вызовом).
-    Запускаем синхронный `ollama.chat` в отдельном потоке, чтобы не блокировать event loop.
-    """
-    try:
-        response = await asyncio.to_thread(
-            chat,
-            model=OLLAMA_MODEL,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response.message.content
-    except Exception as e:
-        return f"Ошибка Ollama: {str(e)}. Запущен ли сервер? Проверь http://localhost:11434"
 
 async def run_all_tests(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Запуск тестов и сохранение результатов"""
@@ -219,7 +192,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 🧠Запустить API тест
 🖼Запустить UI тест
 🔍Запустить все тесты
-🧠Воспользоваться ИИ ( /ask {вопрос} )
     ''')
 
 
@@ -228,111 +200,33 @@ async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(about_text)
 
-
 async def pwd_env(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    venv_path = sys.prefix
-    venv_env = os.environ.get("VIRTUAL_ENV")
-    if venv_env:
-        results = f"Активно виртуальное окружение: {venv_env}"
-    else:
-        results = f"Используется Python из: {venv_path}"
-
-    await update.message.reply_text(f"Какое окружение используется: {results}")
-
-
-async def deactivate_to_venv(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Запуск тестов и сохранение результатов"""
-    await update.message.reply_text("Выхожу из venv окружения")
-    await execute_command("deactivate",update)
-    await update.message.reply_text("Выход из venv окружения успешен")
-
-# === НОВЫЕ КОМАНДЫ ===
-
-async def ask_neural(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """
-    Отправляет запрос нейросети через Ollama.
-    Использование: /ask Как дела?
-    """
-    user_message = " ".join(context.args) if context.args else None
-    if not user_message:
-        await update.message.reply_text("Пожалуйста, напишите вопрос после команды, например:\n/ask Привет, как тебя зовут?")
-        return
-
-    await update.message.reply_text("🤔 Думаю...")
-    answer = await query_ollama(user_message)
-    # Telegram ограничивает длину сообщения 4096 символами
-    safe_answer = answer[:4000] + "..." if len(answer) > 4000 else answer
-    await update.message.reply_text(safe_answer)
-
-async def show_random_dataset(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Показывает случайную запись из загруженного датасета (IMDb)"""
-    if dataset is None:
-        await update.message.reply_text("❌ Датасет не загружен. Проверьте подключение к Hugging Face или название датасета.")
-        return
-
-    # случайный индекс
-    import random
-    idx = random.randint(0, len(dataset) - 1)
-    record = dataset[idx]
-    text = record["text"][:500]  # у датасета IMDb есть поля "text" и "label"
-    label = record["label"]
-    sentiment = "положительный" if label == 1 else "отрицательный"
-    await update.message.reply_text(
-        f"🎲 Случайный отзыв из IMDb:\n\n{text}...\n\nТональность: {sentiment}"
+    """Узнать какое используется окружение"""
+    gen_result = await execute_command(
+        "pwd",
     )
+    results = encodings.utf_8(gen_result)
+    await update.message.reply_text(f'Какое окружение используется {results}')
 
-async def search_dataset(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """
-    Поиск по датасету (простой фильтр).
-    Использование: /search_data слово
-    """
-    if dataset is None:
-        await update.message.reply_text("❌ Датасет недоступен.")
-        return
-    query = " ".join(context.args).lower() if context.args else None
-    if not query:
-        await update.message.reply_text("Укажите поисковый запрос, например: /search_data amazing")
-        return
-
-    # ищем первые 3 записи, содержащие запрос в поле text (медленно для больших датасетов, но для демо ок)
-    results = []
-    for i, record in enumerate(dataset):
-        if query in record["text"].lower():
-            results.append((record["text"][:200], record["label"]))
-            if len(results) >= 3:
-                break
-    if not results:
-        await update.message.reply_text(f"По запросу '{query}' ничего не найдено.")
-        return
-
-    reply = f"🔍 Результаты поиска по '{query}':\n\n"
-    for text_snip, label in results:
-        sentiment = "👍" if label == 1 else "👎"
-        reply += f"{sentiment} {text_snip}...\n\n"
-    await update.message.reply_text(reply[:4000])
-
-# ========== main ==========
 def main():
-    application = Application.builder().token(BOT_TOKEN).build()
+    application = Application.builder().token('8747047863:AAEtbIqoOfDxTVxxyueIICApJU4J65DAsPg').build()
 
-    # все команды
     handlers = [
-        CommandHandler("start", start),
-        CommandHandler("about", about),
         CommandHandler("run_all_tests", run_all_tests),
-        CommandHandler("run_ui_tests", run_ui_tests),
-        CommandHandler("run_api_tests", run_api_tests),
+        CommandHandler("runuitest", run_ui_tests),
+        CommandHandler("runapitest", run_api_tests),
         CommandHandler("allurereport", generate_allure_report),
         CommandHandler("fullreport", full_cycle),
-        CommandHandler("ask", ask_neural),
-        CommandHandler("dataset", show_random_dataset),
-        CommandHandler("search_data", search_dataset),
+        CommandHandler("aboutmyself", about),
+        CommandHandler("start", start)
+
     ]
 
     for handler in handlers:
         application.add_handler(handler)
 
     application.run_polling()
+
 
 if __name__ == "__main__":
     main()
