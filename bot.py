@@ -40,6 +40,7 @@ async def execute_command(cmd: str, update: Update, timeout: int = 300) -> str:
     except Exception as e:
         return f"⚠️ Ошибка: {str(e)}"
 
+
 async def query_ollama(prompt: str) -> str:
     """
     Отправляет запрос в Ollama (асинхронная обёртка над синхронным вызовом).
@@ -54,6 +55,7 @@ async def query_ollama(prompt: str) -> str:
         return response.message.content
     except Exception as e:
         return f"Ошибка Ollama: {str(e)}. Запущен ли сервер? Проверь http://localhost:11434"
+
 
 async def run_all_tests(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Запуск тестов и сохранение результатов"""
@@ -84,6 +86,7 @@ async def run_all_tests(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"📊 Результаты тестов:\n{short_result[:3000]}" if short_result else "✅ Все тесты прошли успешно!"
     )
 
+
 async def run_ui_tests(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Запуск тестов и сохранение результатов"""
     await update.message.reply_text("🔍 Запускаю тесты...")
@@ -112,6 +115,7 @@ async def run_ui_tests(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         f"📊 Результаты тестов:\n{short_result[:3000]}" if short_result else "✅ Все тесты прошли успешно!"
     )
+
 
 async def run_api_tests(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Запуск тестов и сохранение результатов"""
@@ -224,7 +228,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    about_text='👋Привет!\nМеня зовут Дарья. Мне 18 лет, и я студентка IT - Шаг академии.'
+    about_text = '👋Привет!\nМеня зовут Дарья. Мне 18 лет, и я студентка IT - Шаг академии.'
 
     await update.message.reply_text(about_text)
 
@@ -243,8 +247,9 @@ async def pwd_env(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def deactivate_to_venv(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Запуск тестов и сохранение результатов"""
     await update.message.reply_text("Выхожу из venv окружения")
-    await execute_command("deactivate",update)
+    await execute_command("deactivate", update)
     await update.message.reply_text("Выход из venv окружения успешен")
+
 
 # === НОВЫЕ КОМАНДЫ ===
 
@@ -255,7 +260,8 @@ async def ask_neural(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     user_message = " ".join(context.args) if context.args else None
     if not user_message:
-        await update.message.reply_text("Пожалуйста, напишите вопрос после команды, например:\n/ask Привет, как тебя зовут?")
+        await update.message.reply_text(
+            "Пожалуйста, напишите вопрос после команды, например:\n/ask Привет, как тебя зовут?")
         return
 
     await update.message.reply_text("🤔 Думаю...")
@@ -264,10 +270,12 @@ async def ask_neural(update: Update, context: ContextTypes.DEFAULT_TYPE):
     safe_answer = answer[:4000] + "..." if len(answer) > 4000 else answer
     await update.message.reply_text(safe_answer)
 
+
 async def show_random_dataset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Показывает случайную запись из загруженного датасета (IMDb)"""
     if dataset is None:
-        await update.message.reply_text("❌ Датасет не загружен. Проверьте подключение к Hugging Face или название датасета.")
+        await update.message.reply_text(
+            "❌ Датасет не загружен. Проверьте подключение к Hugging Face или название датасета.")
         return
 
     # случайный индекс
@@ -280,6 +288,7 @@ async def show_random_dataset(update: Update, context: ContextTypes.DEFAULT_TYPE
     await update.message.reply_text(
         f"🎲 Случайный отзыв из IMDb:\n\n{text}...\n\nТональность: {sentiment}"
     )
+
 
 async def search_dataset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
@@ -311,6 +320,7 @@ async def search_dataset(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply += f"{sentiment} {text_snip}...\n\n"
     await update.message.reply_text(reply[:4000])
 
+
 # ========== main ==========
 def main():
     application = Application.builder().token(BOT_TOKEN).build()
@@ -333,6 +343,7 @@ def main():
         application.add_handler(handler)
 
     application.run_polling()
+
 
 if __name__ == "__main__":
     main()
