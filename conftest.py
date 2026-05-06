@@ -89,8 +89,8 @@ def pytest_runtest_makereport(item):
     return rep
 
 
-def pytest_addoption(parser):
-    parser.addoption("--browser")
+#def pytest_addoption(parser):
+ #   parser.addoption("--browser")
 
 
 def get_test_case_docstring(item):
